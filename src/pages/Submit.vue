@@ -72,6 +72,8 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase, TABLES, currentUser } from '../utils/supabase.js'
 
+defineOptions({ name: 'Submit' })
+
 const router = useRouter()
 const amount = ref('')
 const category = ref('家用')

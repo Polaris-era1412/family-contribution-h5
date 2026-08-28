@@ -87,6 +87,8 @@ import { useRouter } from 'vue-router'
 import { supabase, TABLES, currentUser } from '../utils/supabase.js'
 import { getLevel, getLevelColor, getLevelTier } from '../utils/levels.js'
 
+defineOptions({ name: 'Home' })
+
 const router = useRouter()
 const loaded = ref(false)
 const me = ref(null)

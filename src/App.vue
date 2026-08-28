@@ -1,27 +1,28 @@
 <template>
   <div class="app">
-    <router-view v-slot="{ Component }">
-      <transition name="fade" mode="out-in">
-        <component :is="Component" />
-      </transition>
+    <router-view v-slot="{ Component, route: r }">
+      <!-- 底部 tab 页面用 keep-alive 缓存，切换不重新加载 -->
+      <keep-alive :include="cachedPages">
+        <component :is="Component" :key="r.path" />
+      </keep-alive>
     </router-view>
 
     <!-- 底部导航 -->
     <nav class="tab-bar" v-if="showTabBar">
       <router-link to="/home" class="tab-item" active-class="active">
-        <span class="icon">🏠</span>
+        <span class="icon">&#x1F3E0;</span>
         <span class="label">首页</span>
       </router-link>
       <router-link to="/submit" class="tab-item" active-class="active">
-        <span class="icon">📝</span>
+        <span class="icon">&#x1F4DD;</span>
         <span class="label">申报</span>
       </router-link>
       <router-link to="/vote" class="tab-item" active-class="active">
-        <span class="icon">🗳️</span>
+        <span class="icon">&#x1F5F3;&#xFE0F;</span>
         <span class="label">表决</span>
       </router-link>
       <router-link to="/mine" class="tab-item" active-class="active">
-        <span class="icon">👤</span>
+        <span class="icon">&#x1F464;</span>
         <span class="label">我</span>
       </router-link>
     </nav>
@@ -33,6 +34,9 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+
+// 缓存底部 tab 页面，切换时不重新请求数据
+const cachedPages = ['Home', 'Submit', 'Vote', 'Mine']
 
 // 判断是否显示底部导航
 const showTabBar = computed(() => {
@@ -56,20 +60,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.app {
+#app {
   min-height: 100vh;
   padding-bottom: 60px;
-}
-
-/* 页面切换动画 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 
 /* 底部导航 */

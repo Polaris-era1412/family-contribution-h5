@@ -108,6 +108,8 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase, TABLES, currentUser } from '../utils/supabase.js'
 
+defineOptions({ name: 'Vote' })
+
 const router = useRouter()
 const tab = ref('pending')
 const pending = ref([])
