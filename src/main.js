@@ -22,8 +22,8 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫：需要登录的页面
-const protectedRoutes = ['/home', '/submit', '/vote', '/mine', '/join', '/admin', '/history']
+// 路由守卫：需要登录的页面（/join 不需要，新用户要在这里创建家庭）
+const protectedRoutes = ['/home', '/submit', '/vote', '/mine', '/admin', '/history']
 
 router.beforeEach((to, from, next) => {
   if (protectedRoutes.includes(to.path)) {
