@@ -6,7 +6,8 @@ import { currentUser } from './utils/supabase.js'
 
 // 路由配置
 const routes = [
-  { path: '/', redirect: '/home' },
+  { path: '/', redirect: '/login' },
+  { path: '/login', component: () => import('./pages/Login.vue') },
   { path: '/home', component: () => import('./pages/Home.vue') },
   { path: '/submit', component: () => import('./pages/Submit.vue') },
   { path: '/vote', component: () => import('./pages/Vote.vue') },
@@ -21,13 +22,17 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫：已登录用户自动跳转首页，不再显示加入页
+// 路由守卫：需要登录的页面
+const protectedRoutes = ['/home', '/submit', '/vote', '/mine', '/join', '/admin', '/history']
+
 router.beforeEach((to, from, next) => {
-  const user = currentUser.get()
-  if (to.path === '/join' && user) {
-    next('/home')
-  } else if ((to.path === '/home' || to.path === '/submit' || to.path === '/vote' || to.path === '/mine') && !user) {
-    next('/join')
+  if (protectedRoutes.includes(to.path)) {
+    const user = currentUser.get()
+    if (!user) {
+      next('/login')
+    } else {
+      next()
+    }
   } else {
     next()
   }

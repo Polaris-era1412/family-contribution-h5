@@ -315,10 +315,10 @@ function copyInvite() {
 }
 
 function logout() {
-  if (confirm('确定要退出登录吗？退出后需要重新加入家庭。')) {
+  if (confirm('确定要退出登录吗？退出后需要用昵称和邀请码重新登录。')) {
     currentUser.clear()
     savedFamily.clear()
-    router.push('/join')
+    router.push('/login')
   }
 }
 </script>

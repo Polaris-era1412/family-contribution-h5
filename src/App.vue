@@ -36,7 +36,7 @@ const route = useRoute()
 
 // 判断是否显示底部导航
 const showTabBar = computed(() => {
-  const hiddenPages = ['/join', '/admin', '/history']
+  const hiddenPages = ['/login', '/join', '/admin', '/history']
   return !hiddenPages.some(page => route.path.startsWith(page))
 })
 </script>
