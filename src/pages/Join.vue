@@ -5,6 +5,15 @@
       <p>一元即一点 · 委员投票 · 多劳多得</p>
     </div>
 
+    <!-- 快速恢复：如果之前加入过家庭，显示回到家庭的按钮 -->
+    <div v-if="savedFamilyInfo" class="card restore-card">
+      <div class="restore-info">
+        <span class="restore-name">{{ savedFamilyInfo.name }}</span>
+        <span class="restore-family">（{{ savedFamilyInfo.familyName }}）</span>
+      </div>
+      <button class="btn btn-primary" @click="goBack">回到我的家庭</button>
+    </div>
+
     <div class="card">
       <div class="tabs">
         <div
@@ -70,9 +79,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase, TABLES, generateInviteCode, currentUser } from '../utils/supabase.js'
+import { supabase, TABLES, generateInviteCode, currentUser, savedFamily } from '../utils/supabase.js'
 
 const router = useRouter()
 const mode = ref('create')
@@ -80,6 +89,16 @@ const myName = ref('')
 const familyName = ref('')
 const inviteCode = ref('')
 const loading = ref(false)
+
+const savedFamilyInfo = computed(() => savedFamily.get())
+
+function goBack() {
+  const info = savedFamily.get()
+  if (info) {
+    currentUser.set({ id: info.memberId, family_id: info.familyId, name: info.name })
+    router.push('/home')
+  }
+}
 
 async function handleSubmit() {
   if (!myName.value.trim()) {
@@ -146,6 +165,14 @@ async function createFamily() {
     name: member.name
   })
 
+  // 额外保存家庭信息用于快速恢复
+  savedFamily.set({
+    memberId: member.id,
+    familyId: family.id,
+    name: member.name,
+    familyName: family.name
+  })
+
   router.push('/home')
 }
 
@@ -187,6 +214,14 @@ async function joinFamily() {
     id: member.id,
     family_id: family.id,
     name: member.name
+  })
+
+  // 额外保存家庭信息用于快速恢复
+  savedFamily.set({
+    memberId: member.id,
+    familyId: family.id,
+    name: member.name,
+    familyName: family.name
   })
 
   router.push('/home')
@@ -280,5 +315,24 @@ async function joinFamily() {
 
 .tips p {
   margin-bottom: 4px;
+}
+
+/* 快速恢复卡片 */
+.restore-card {
+  background: linear-gradient(135deg, #fff8e1, #ffffff);
+  border: 2px solid #ffe082;
+  margin-bottom: 16px;
+}
+.restore-info {
+  margin-bottom: 12px;
+}
+.restore-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #c62828;
+}
+.restore-family {
+  font-size: 14px;
+  color: #78909c;
 }
 </style>

@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Supabase 配置 - 需要用户自己填写
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co'
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key'
+// Supabase 配置 - 直接写死（Netlify Drop 不支持环境变量）
+const supabaseUrl = 'https://fdzassixxlqbvqnymzms.supabase.co'
+const supabaseKey = 'sb_publishable_nZN3olFTsOOPYHqZZWOiuw_ofdc58hN'
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
@@ -51,5 +51,18 @@ export const currentUser = {
   },
   clear() {
     storage.remove('currentUser')
+  }
+}
+
+// 已加入的家庭信息（用于快速恢复，不依赖 member id）
+export const savedFamily = {
+  get() {
+    return storage.get('savedFamily')
+  },
+  set(data) {
+    storage.set('savedFamily', data)
+  },
+  clear() {
+    storage.remove('savedFamily')
   }
 }

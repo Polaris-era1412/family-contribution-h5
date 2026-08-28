@@ -67,6 +67,27 @@ body {
   background: #d0d0d0;
 }
 
+.btn-danger {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.btn-danger:active {
+  background: #ffcdd2;
+}
+
+.btn-block {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.btn-mini {
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
 /* 输入框样式 */
 .input {
   width: 100%;

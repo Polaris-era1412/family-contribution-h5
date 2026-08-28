@@ -114,7 +114,14 @@
           style="margin-top: 12px"
           @click="$router.push('/admin')"
         >
-          ⚙️ 管理后台
+          ️ 管理后台
+        </button>
+        <button
+          class="btn btn-danger btn-block"
+          style="margin-top: 12px"
+          @click="logout"
+        >
+          退出登录
         </button>
       </div>
 
@@ -184,7 +191,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase, TABLES, currentUser } from '../utils/supabase.js'
+import { supabase, TABLES, currentUser, savedFamily } from '../utils/supabase.js'
 import { LEVELS, getLevel, getLevelColor, getLevelTier } from '../utils/levels.js'
 
 const router = useRouter()
@@ -305,6 +312,14 @@ function copyInvite() {
   navigator.clipboard.writeText(family.value.invite_code)
     .then(() => alert('邀请码已复制'))
     .catch(() => alert('复制失败，请手动复制'))
+}
+
+function logout() {
+  if (confirm('确定要退出登录吗？退出后需要重新加入家庭。')) {
+    currentUser.clear()
+    savedFamily.clear()
+    router.push('/join')
+  }
 }
 </script>
 
