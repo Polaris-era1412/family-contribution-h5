@@ -37,6 +37,12 @@
 
         <div class="p-amount">+{{ item.amount }}<span class="p-unit">贡献度</span></div>
         <div v-if="item.note" class="p-note">{{ item.note }}</div>
+        <img
+          v-if="item.image_url"
+          :src="item.image_url"
+          class="p-image"
+          @click="previewImage = item.image_url"
+        />
 
         <div class="p-vote-line">
           <span class="v-ok">赞成 {{ item.approve_count }}</span>
@@ -94,12 +100,23 @@
         </div>
         <div class="p-amount small">+{{ item.amount }}<span class="p-unit">贡献度</span></div>
         <div v-if="item.note" class="p-note">{{ item.note }}</div>
+        <img
+          v-if="item.image_url"
+          :src="item.image_url"
+          class="p-image"
+          @click="previewImage = item.image_url"
+        />
         <div v-if="item.status === 'vetoed'" class="p-note veto-reason">
           🔱 {{ item.veto_by }} 否决{{ item.veto_reason ? '：' + item.veto_reason : '' }}
         </div>
         <div class="p-time">{{ formatTime(item.created_at) }}</div>
       </div>
     </template>
+
+    <!-- 图片预览 -->
+    <div v-if="previewImage" class="image-preview-modal" @click="previewImage = ''">
+      <img :src="previewImage" class="preview-img" />
+    </div>
   </div>
 </template>
 
@@ -115,6 +132,7 @@ const tab = ref('pending')
 const pending = ref([])
 const done = ref([])
 const canVeto = ref(false)
+const previewImage = ref('')
 
 const user = currentUser.get()
 
@@ -521,5 +539,37 @@ async function checkResolution(contributionId, contribution) {
 .status.withdrawn {
   background: #eceff1;
   color: #90a4ae;
+}
+
+/* 图片展示 */
+.p-image {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+/* 图片预览模态框 */
+.image-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
 }
 </style>

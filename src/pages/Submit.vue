@@ -25,16 +25,20 @@
         </button>
       </div>
 
+      <!-- 类别（分组显示） -->
       <div class="form-group">
         <label>类别</label>
-        <div class="categories">
-          <div
-            v-for="cat in categories"
-            :key="cat"
-            :class="['category-item', { active: category === cat }]"
-            @click="category = cat"
-          >
-            {{ cat }}
+        <div class="cat-group" v-for="group in categoryGroups" :key="group.name">
+          <div class="cat-group-name">{{ group.name }}</div>
+          <div class="categories">
+            <div
+              v-for="cat in group.items"
+              :key="cat"
+              :class="['category-item', { active: category === cat }]"
+              @click="category = cat"
+            >
+              {{ cat }}
+            </div>
           </div>
         </div>
       </div>
@@ -45,9 +49,34 @@
           v-model="note"
           class="textarea"
           placeholder="如：本周买菜、交水电费、辅导作业一小时…"
-          maxlength="60"
+          maxlength="120"
           rows="3"
         ></textarea>
+      </div>
+
+      <!-- 图片上传（必选） -->
+      <div class="form-group">
+        <label>凭证图片（必选）</label>
+        <div class="upload-area" @click="$refs.fileInput.click()">
+          <template v-if="imagePreview">
+            <img :src="imagePreview" class="upload-preview" />
+            <div class="upload-remove" @click.stop="removeImage">✕</div>
+          </template>
+          <template v-else>
+            <div class="upload-placeholder">
+              <span class="upload-icon"></span>
+              <span class="upload-text">点击上传图片</span>
+              <span class="upload-hint">支持拍照或从相册选择</span>
+            </div>
+          </template>
+        </div>
+        <input
+          ref="fileInput"
+          type="file"
+          accept="image/*"
+          style="display:none"
+          @change="handleImageSelect"
+        />
       </div>
     </div>
 
@@ -62,7 +91,7 @@
       :disabled="loading"
       @click="handleSubmit"
     >
-      {{ loading ? '提交中...' : '提交草案' }}
+      {{ loading ? (uploading ? '上传图片中...' : '提交中...') : '提交草案' }}
     </button>
   </div>
 </template>
@@ -76,19 +105,108 @@ defineOptions({ name: 'Submit' })
 
 const router = useRouter()
 const amount = ref('')
-const category = ref('家用')
+const category = ref('买菜购物')
 const note = ref('')
 const loading = ref(false)
+const uploading = ref(false)
+const imageFile = ref(null)
+const imagePreview = ref('')
 
 const quickAmounts = [10, 50, 100, 520]
-const categories = [
-  '家用', '家务劳动', '餐饮买菜', '教育辅导', '医疗照护', '人情往来', '其他'
+
+// 分类组
+const categoryGroups = [
+  {
+    name: '家务劳动',
+    items: ['做饭', '洗碗打扫', '洗衣整理', '带娃陪读', '辅导作业', '照顾老人', '遛狗喂猫', '修理家电']
+  },
+  {
+    name: '家庭开支',
+    items: ['买菜购物', '水电燃气', '房租房贷', '物业网费', '交通出行', '医疗健康']
+  },
+  {
+    name: '收入贡献',
+    items: ['工资上交', '奖金红包', '理财收益', '兼职外快']
+  },
+  {
+    name: '情感社交',
+    items: ['人情往来', '请客聚餐', '外出旅游', '节日礼物']
+  },
+  {
+    name: '教育成长',
+    items: ['学费培训', '买书资料', '兴趣班']
+  },
+  {
+    name: '其他',
+    items: ['其他']
+  }
 ]
+
+// 处理图片选择
+function handleImageSelect(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    alert('请选择图片文件')
+    return
+  }
+
+  // 验证文件大小（限制 5MB）
+  if (file.size > 5 * 1024 * 1024) {
+    alert('图片大小不能超过 5MB')
+    return
+  }
+
+  imageFile.value = file
+
+  // 创建预览
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    imagePreview.value = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+// 移除图片
+function removeImage() {
+  imageFile.value = null
+  imagePreview.value = ''
+}
+
+// 上传图片到 Supabase Storage
+async function uploadImage(file, memberId) {
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${memberId}_${Date.now()}.${fileExt}`
+  const filePath = `contributions/${fileName}`
+
+  const { data, error } = await supabase.storage
+    .from('contribution-images')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    })
+
+  if (error) throw error
+
+  // 获取公开访问 URL
+  const { data: { publicUrl } } = supabase.storage
+    .from('contribution-images')
+    .getPublicUrl(filePath)
+
+  return publicUrl
+}
 
 async function handleSubmit() {
   const num = parseFloat(amount.value)
   if (!num || num <= 0) {
     alert('请输入大于 0 的金额')
+    return
+  }
+
+  if (!imageFile.value) {
+    alert('请上传凭证图片')
     return
   }
 
@@ -99,6 +217,7 @@ async function handleSubmit() {
   }
 
   loading.value = true
+  uploading.value = true
 
   try {
     // 获取成员信息
@@ -114,6 +233,9 @@ async function handleSubmit() {
       return
     }
 
+    // 上传图片
+    const imageUrl = await uploadImage(imageFile.value, member.id)
+
     // 创建贡献记录
     const { data: contribution, error } = await supabase
       .from(TABLES.CONTRIBUTIONS)
@@ -124,6 +246,7 @@ async function handleSubmit() {
         amount: num,
         note: note.value.trim(),
         category: category.value,
+        image_url: imageUrl,
         status: 'pending',
         votes: { [member.id]: { name: member.name, decision: 'approve', auto: true } },
         created_at: new Date().toISOString()
@@ -150,12 +273,14 @@ async function handleSubmit() {
     // 清空表单
     amount.value = ''
     note.value = ''
+    removeImage()
 
     router.push('/vote')
   } catch (error) {
     alert(error.message || '提交失败')
   } finally {
     loading.value = false
+    uploading.value = false
   }
 }
 
@@ -285,6 +410,84 @@ async function resolveContribution(contributionId, familyId) {
   background: #ffebee;
   color: #c62828;
   font-weight: 700;
+}
+
+/* 分类组 */
+.cat-group {
+  margin-bottom: 12px;
+}
+
+.cat-group-name {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 6px;
+  padding-left: 4px;
+}
+
+/* 图片上传 */
+.upload-area {
+  border: 2px dashed #e0e0e0;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-area:hover {
+  border-color: #c62828;
+  background: #fff8f8;
+}
+
+.upload-preview {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.upload-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-icon::before {
+  content: '';
+  font-size: 48px;
+}
+
+.upload-text {
+  font-size: 16px;
+  color: #666;
+  font-weight: 600;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #999;
 }
 
 .textarea {

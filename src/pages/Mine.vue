@@ -70,6 +70,12 @@
                 <span class="c-cat">{{ item.category }}</span>
               </div>
               <div v-if="item.note" class="c-note">{{ item.note }}</div>
+              <img
+                v-if="item.image_url"
+                :src="item.image_url"
+                class="c-image"
+                @click="previewImage = item.image_url"
+              />
               <div class="c-time">{{ formatTime(item.created_at) }}</div>
             </div>
             <div class="status pending">待表决</div>
@@ -90,11 +96,22 @@
                 <span class="c-cat">{{ item.category }}</span>
               </div>
               <div v-if="item.note" class="c-note">{{ item.note }}</div>
+              <img
+                v-if="item.image_url"
+                :src="item.image_url"
+                class="c-image"
+                @click="previewImage = item.image_url"
+              />
               <div class="c-time">{{ formatTime(item.created_at) }}</div>
             </div>
             <div class="status approved">已入账</div>
           </div>
         </template>
+      </div>
+
+      <!-- 图片预览 -->
+      <div v-if="previewImage" class="image-preview-modal" @click="previewImage = ''">
+        <img :src="previewImage" class="preview-img" />
       </div>
 
       <!-- 家庭信息 -->
@@ -204,6 +221,7 @@ const tab = ref('pending')
 const pending = ref([])
 const approved = ref([])
 const approvedTotal = ref(0)
+const previewImage = ref('')
 const levels = LEVELS
 
 const heroTier = ref(1)
@@ -693,5 +711,37 @@ function logout() {
 .status.pending {
   background: #fff8e1;
   color: #e65100;
+}
+
+/* 图片展示 */
+.c-image {
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+/* 图片预览模态框 */
+.image-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
 }
 </style>

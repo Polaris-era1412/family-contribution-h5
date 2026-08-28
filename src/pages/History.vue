@@ -27,10 +27,21 @@
       </div>
       <div class="h-amount">+{{ item.amount }}<span class="h-unit">贡献度</span></div>
       <div v-if="item.note" class="p-note">{{ item.note }}</div>
+      <img
+        v-if="item.image_url"
+        :src="item.image_url"
+        class="h-image"
+        @click="previewImage = item.image_url"
+      />
       <div v-if="item.status === 'vetoed'" class="p-note veto-reason">
         🔱 {{ item.veto_by }} 否决{{ item.veto_reason ? '：' + item.veto_reason : '' }}
       </div>
       <div class="h-time">{{ formatTime(item.created_at) }}</div>
+    </div>
+
+    <!-- 图片预览 -->
+    <div v-if="previewImage" class="image-preview-modal" @click="previewImage = ''">
+      <img :src="previewImage" class="preview-img" />
     </div>
   </div>
 </template>
@@ -51,6 +62,7 @@ const filters = [
 
 const filter = ref('all')
 const all = ref([])
+const previewImage = ref('')
 
 const shown = computed(() => {
   if (filter.value === 'all') return all.value
@@ -222,5 +234,37 @@ function getStatusText(status) {
 .status.withdrawn {
   background: #eceff1;
   color: #90a4ae;
+}
+
+/* 图片展示 */
+.h-image {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+/* 图片预览模态框 */
+.image-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
 }
 </style>
