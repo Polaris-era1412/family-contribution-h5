@@ -106,7 +106,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase, TABLES, currentUser } from '../utils/supabase.js'
+import { supabase, TABLES, currentUser, clearSession } from '../utils/supabase.js'
 
 defineOptions({ name: 'Vote' })
 
@@ -133,6 +133,12 @@ async function loadData() {
     .select('*')
     .eq('id', user.id)
     .single()
+
+  if (!member) {
+    clearSession()
+    router.push('/login')
+    return
+  }
 
   // 获取所有贡献记录
   const { data: contributions } = await supabase

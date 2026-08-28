@@ -38,7 +38,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase, TABLES, currentUser } from '../utils/supabase.js'
+import { supabase, TABLES, currentUser, clearSession } from '../utils/supabase.js'
 
 const router = useRouter()
 const filters = [
@@ -75,7 +75,8 @@ async function loadData() {
     .single()
 
   if (!member) {
-    router.push('/join')
+    clearSession()
+    router.push('/login')
     return
   }
 

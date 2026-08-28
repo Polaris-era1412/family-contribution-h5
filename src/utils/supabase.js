@@ -66,3 +66,9 @@ export const savedFamily = {
     storage.remove('savedFamily')
   }
 }
+
+// 清除会话（数据库清空后调用）
+export function clearSession() {
+  currentUser.clear()
+  savedFamily.clear()
+}

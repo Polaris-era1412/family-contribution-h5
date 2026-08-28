@@ -70,7 +70,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase, TABLES, currentUser } from '../utils/supabase.js'
+import { supabase, TABLES, currentUser, clearSession } from '../utils/supabase.js'
 
 defineOptions({ name: 'Submit' })
 
@@ -107,6 +107,12 @@ async function handleSubmit() {
       .select('*')
       .eq('id', user.id)
       .single()
+
+    if (!member) {
+      clearSession()
+      router.push('/login')
+      return
+    }
 
     // 创建贡献记录
     const { data: contribution, error } = await supabase

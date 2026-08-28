@@ -92,7 +92,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase, TABLES, currentUser } from '../utils/supabase.js'
+import { supabase, TABLES, currentUser, clearSession } from '../utils/supabase.js'
 import { LEVELS, getLevel } from '../utils/levels.js'
 
 const router = useRouter()
@@ -121,7 +121,8 @@ async function loadData() {
     .single()
 
   if (!member) {
-    router.push('/join')
+    clearSession()
+    router.push('/login')
     return
   }
 

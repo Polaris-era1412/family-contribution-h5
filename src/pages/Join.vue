@@ -91,7 +91,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase, TABLES, generateInviteCode, currentUser, savedFamily } from '../utils/supabase.js'
+import { supabase, TABLES, generateInviteCode, currentUser, savedFamily, clearSession } from '../utils/supabase.js'
 
 const router = useRouter()
 const mode = ref('create')
@@ -102,9 +102,21 @@ const loading = ref(false)
 
 const savedFamilyInfo = computed(() => savedFamily.get())
 
-function goBack() {
+async function goBack() {
   const info = savedFamily.get()
   if (info) {
+    // 验证成员是否还存在
+    const { data: member } = await supabase
+      .from(TABLES.MEMBERS)
+      .select('*')
+      .eq('id', info.memberId)
+      .single()
+
+    if (!member) {
+      clearSession()
+      return
+    }
+
     currentUser.set({ id: info.memberId, family_id: info.familyId, name: info.name })
     router.push('/home')
   }
