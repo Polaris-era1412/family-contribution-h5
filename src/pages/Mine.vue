@@ -256,6 +256,7 @@ async function loadData() {
     return
   }
 
+  // 先渲染我的卡片（不等待其他请求）
   member.value = memberData
   heroTier.value = getLevelTier(memberData.approved_total)
   heroColor.value = getLevelColor(memberData.approved_total)
@@ -271,31 +272,20 @@ async function loadData() {
     remaining.value = levelInfo.next.min - memberData.approved_total
   }
 
-  // 获取家庭信息
-  const { data: familyData } = await supabase
-    .from(TABLES.FAMILIES)
-    .select('*')
-    .eq('id', memberData.family_id)
-    .single()
+  // 并行请求：家庭信息 + 成员列表 + 贡献记录（同时发，不等彼此）
+  const [familyRes, membersRes, contributionsRes] = await Promise.all([
+    supabase.from(TABLES.FAMILIES).select('*').eq('id', memberData.family_id).single(),
+    supabase.from(TABLES.MEMBERS).select('*').eq('family_id', memberData.family_id),
+    supabase.from(TABLES.CONTRIBUTIONS).select('*').eq('member_id', memberData.id).order('created_at', { ascending: false })
+  ])
 
-  family.value = familyData
+  family.value = familyRes.data
 
-  // 获取所有成员计算否决权
-  const { data: allMembers } = await supabase
-    .from(TABLES.MEMBERS)
-    .select('*')
-    .eq('family_id', memberData.family_id)
-
+  const allMembers = membersRes.data || []
   const maxTotal = Math.max(...allMembers.map(m => m.approved_total || 0))
   isVeto.value = maxTotal > 0 && memberData.approved_total === maxTotal
 
-  // 获取我的贡献记录
-  const { data: contributions } = await supabase
-    .from(TABLES.CONTRIBUTIONS)
-    .select('*')
-    .eq('member_id', memberData.id)
-    .order('created_at', { ascending: false })
-
+  const contributions = contributionsRes.data || []
   const pendingList = []
   const approvedList = []
   let total = 0

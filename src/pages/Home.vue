@@ -1,6 +1,29 @@
 <template>
   <div class="home-page">
-    <div v-if="!loaded" class="loading">加载中...</div>
+    <!-- 骨架屏 -->
+    <div v-if="!loaded" class="skeleton">
+      <div class="skeleton-card skeleton-me">
+        <div class="skeleton-row">
+          <div class="skeleton-circle"></div>
+          <div class="skeleton-lines">
+            <div class="skeleton-line w60"></div>
+            <div class="skeleton-line w40"></div>
+          </div>
+          <div class="skeleton-score">
+            <div class="skeleton-line w80"></div>
+            <div class="skeleton-line w50"></div>
+          </div>
+        </div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-line w30 mb8"></div>
+        <div class="skeleton-rank" v-for="i in 3" :key="i">
+          <div class="skeleton-circle small"></div>
+          <div class="skeleton-line w50"></div>
+          <div class="skeleton-line w20"></div>
+        </div>
+      </div>
+    </div>
 
     <template v-if="loaded && me">
       <!-- 我的贡献卡片 -->
@@ -131,6 +154,7 @@ async function loadData() {
     return
   }
 
+  // 先渲染我的卡片（不等待其他请求）
   me.value = memberData
   avatarChar.value = memberData.name.charAt(0)
   meTotalText.value = memberData.approved_total
@@ -148,13 +172,13 @@ async function loadData() {
     remaining.value = levelInfo.next.min - memberData.approved_total
   }
 
-  // 获取所有成员
-  const { data: allMembers } = await supabase
-    .from(TABLES.MEMBERS)
-    .select('*')
-    .eq('family_id', memberData.family_id)
-    .order('approved_total', { ascending: false })
+  // 并行请求：成员列表 + 待表决数量（同时发，不等彼此）
+  const [membersRes, pendingRes] = await Promise.all([
+    supabase.from(TABLES.MEMBERS).select('*').eq('family_id', memberData.family_id).order('approved_total', { ascending: false }),
+    supabase.from(TABLES.CONTRIBUTIONS).select('*', { count: 'exact', head: true }).eq('family_id', memberData.family_id).eq('status', 'pending')
+  ])
 
+  const allMembers = membersRes.data || []
   members.value = allMembers.map(m => ({
     ...m,
     levelColor: getLevelColor(m.approved_total),
@@ -162,20 +186,14 @@ async function loadData() {
   }))
 
   // 计算一票否决权
-  const maxTotal = Math.max(...allMembers.map(m => m.approved_total))
+  const maxTotal = Math.max(...allMembers.map(m => m.approved_total || 0))
   const vetoIds = maxTotal > 0
     ? allMembers.filter(m => m.approved_total === maxTotal).map(m => m.id)
     : []
   vetoMap.value = Object.fromEntries(vetoIds.map(id => [id, true]))
 
-  // 获取待表决数量
-  const { count } = await supabase
-    .from(TABLES.CONTRIBUTIONS)
-    .select('*', { count: 'exact', head: true })
-    .eq('family_id', memberData.family_id)
-    .eq('status', 'pending')
-
-  pendingCount.value = count || 0
+  // 待表决数量已在上面并行请求中获取
+  pendingCount.value = pendingRes.count || 0
   loaded.value = true
 }
 </script>
@@ -191,6 +209,78 @@ async function loadData() {
   text-align: center;
   padding: 100px 0;
   color: #999;
+}
+
+/* 骨架屏 */
+.skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeleton-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.skeleton-me {
+  background: linear-gradient(160deg, #fff7f0, #ffffff 60%);
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+}
+
+.skeleton-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  flex-shrink: 0;
+}
+
+.skeleton-circle.small {
+  width: 40px;
+  height: 40px;
+}
+
+.skeleton-lines {
+  flex: 1;
+  margin-left: 16px;
+}
+
+.skeleton-score {
+  text-align: right;
+  min-width: 80px;
+}
+
+.skeleton-line {
+  height: 14px;
+  background: #e0e0e0;
+  border-radius: 7px;
+  margin-bottom: 8px;
+}
+
+.skeleton-line.w20 { width: 20%; }
+.skeleton-line.w30 { width: 30%; }
+.skeleton-line.w40 { width: 40%; }
+.skeleton-line.w50 { width: 50%; }
+.skeleton-line.w60 { width: 60%; }
+.skeleton-line.w80 { width: 80%; }
+
+.mb8 { margin-bottom: 8px; }
+
+.skeleton-rank {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  gap: 12px;
 }
 
 .me-card {
