@@ -50,13 +50,23 @@
         />
       </div>
 
+      <div v-if="mode === 'create'" class="form-group">
+        <label>邀请码（自定义，家人用此码加入）</label>
+        <input
+          v-model="inviteCode"
+          class="input code"
+          placeholder="如：family"
+          maxlength="12"
+        />
+      </div>
+
       <div v-else class="form-group">
         <label>邀请码</label>
         <input
           v-model="inviteCode"
           class="input code"
-          placeholder="6 位邀请码"
-          maxlength="6"
+          placeholder="输入家庭邀请码"
+          maxlength="12"
         />
       </div>
 
@@ -125,8 +135,11 @@ async function createFamily() {
   if (!familyName.value.trim()) {
     throw new Error('请填写家庭名称')
   }
+  if (!inviteCode.value.trim()) {
+    throw new Error('请输入邀请码')
+  }
 
-  const code = generateInviteCode()
+  const code = inviteCode.value.trim().toUpperCase()
 
   // 创建家庭
   const { data: family, error: familyError } = await supabase
@@ -139,7 +152,12 @@ async function createFamily() {
     .select()
     .single()
 
-  if (familyError) throw familyError
+  if (familyError) {
+    if (familyError.code === '23505') {
+      throw new Error('邀请码已被使用，请换一个')
+    }
+    throw familyError
+  }
 
   // 创建成员（创建者即管理员）
   const { data: member, error: memberError } = await supabase
