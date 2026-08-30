@@ -335,7 +335,7 @@ async function checkResolution(contributionId, contribution) {
       .eq('id', contribution.member_id)
       .single()
 
-    const newTotal = (member.approved_total || 0) + contribution.amount
+    const newTotal = Number(member.approved_total || 0) + Number(contribution.amount)
 
     const { getLevel } = await import('../utils/levels.js')
     const { current: newLevel } = getLevel(newTotal)

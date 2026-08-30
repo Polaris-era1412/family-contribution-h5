@@ -310,7 +310,7 @@ async function resolveContribution(contributionId, familyId) {
     .eq('id', contribution.member_id)
     .single()
 
-  const newTotal = (member.approved_total || 0) + contribution.amount
+  const newTotal = Number(member.approved_total || 0) + Number(contribution.amount)
 
   // 计算新等级
   const { getLevel } = await import('../utils/levels.js')

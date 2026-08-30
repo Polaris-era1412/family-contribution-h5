@@ -240,7 +240,7 @@ async function settle(contributionId, decision) {
       .eq('id', contribution.member_id)
       .single()
 
-    const newTotal = (member.approved_total || 0) + contribution.amount
+    const newTotal = Number(member.approved_total || 0) + Number(contribution.amount)
 
     const { current: newLevel } = getLevel(newTotal)
 

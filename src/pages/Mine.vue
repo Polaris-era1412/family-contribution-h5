@@ -295,7 +295,7 @@ async function loadData() {
       pendingList.push(c)
     } else if (c.status === 'approved') {
       approvedList.push(c)
-      total += c.amount
+      total += Number(c.amount)
     }
   }
 
