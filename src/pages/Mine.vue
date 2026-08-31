@@ -125,6 +125,9 @@
         <button class="btn btn-secondary btn-block" style="margin-top: 16px" @click="$router.push('/history')">
           📜 历史提案记录
         </button>
+        <button class="btn btn-primary btn-block" style="margin-top: 12px" @click="$router.push('/ai-summary')">
+          🤖 AI 总结报告
+        </button>
         <button
           v-if="member.is_admin"
           class="btn btn-primary btn-block"

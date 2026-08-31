@@ -100,6 +100,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase, TABLES, currentUser, clearSession } from '../utils/supabase.js'
+import { generateSubmissionFeedback } from '../utils/ai.js'
 
 defineOptions({ name: 'Submit' })
 
@@ -265,9 +266,21 @@ async function handleSubmit() {
     if (count === 1) {
       // 单人家庭，自动通过
       await resolveContribution(contribution.id, member.family_id)
-      alert('家庭仅一人，提案自动通过并计入贡献度')
+      // AI 即时评语
+      try {
+        const feedback = await generateSubmissionFeedback(num, category.value, note.value)
+        alert(`家庭仅一人，提案自动通过并计入贡献度\n\nAI：${feedback}`)
+      } catch {
+        alert('家庭仅一人，提案自动通过并计入贡献度')
+      }
     } else {
-      alert('已提交，待表决')
+      // AI 即时评语
+      try {
+        const feedback = await generateSubmissionFeedback(num, category.value, note.value)
+        alert(`已提交，待表决\n\nAI：${feedback}`)
+      } catch {
+        alert('已提交，待表决')
+      }
     }
 
     // 清空表单

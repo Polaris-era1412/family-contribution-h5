@@ -14,7 +14,8 @@ const routes = [
   { path: '/mine', component: () => import('./pages/Mine.vue') },
   { path: '/join', component: () => import('./pages/Join.vue') },
   { path: '/admin', component: () => import('./pages/Admin.vue') },
-  { path: '/history', component: () => import('./pages/History.vue') }
+  { path: '/history', component: () => import('./pages/History.vue') },
+  { path: '/ai-summary', component: () => import('./pages/AISummary.vue') }
 ]
 
 const router = createRouter({
@@ -23,7 +24,7 @@ const router = createRouter({
 })
 
 // 路由守卫：需要登录的页面（/join 不需要，新用户要在这里创建家庭）
-const protectedRoutes = ['/home', '/submit', '/vote', '/mine', '/admin', '/history']
+const protectedRoutes = ['/home', '/submit', '/vote', '/mine', '/admin', '/history', '/ai-summary']
 
 router.beforeEach((to, from, next) => {
   if (protectedRoutes.includes(to.path)) {
